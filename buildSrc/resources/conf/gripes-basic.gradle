@@ -1,0 +1,86 @@
+apply {
+	plugin 'jetty'	
+}
+
+def gripesConfig = new ConfigSlurper().parse(new File("resources/Config.groovy").text)
+gripesConfig.addons.each {
+	if(new File("gripes-addons/${it.replace('-src','')}/gripes.gradle").exists())
+		apply from: "gripes-addons/${it.replace('-src','')}/gripes.gradle"
+}
+
+gripes {
+	appName = "Gripes Application"
+	server = [
+		contextPath : "/gripes",
+		webAppSourceDirectory : file("web"),
+		httpPort : 8888,
+		stopPort : 8889,
+		stopKey  : "stopJetty",
+		scanIntervalSeconds : 1,
+		scanTargets : [file("build/classes/main")]
+	]
+	src = "/src"
+	resources = "/resources"
+	packageBase = "com.acme"
+}
+
+configurations {
+	provided {  }
+}
+
+dependencies {
+	//** Groovy
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.10'
+	
+	//** Framework
+	compile group: 'net.sourceforge.stripes', name: 'stripes', version: '1.5.6'
+	
+	//** Servlet
+	provided group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+	runtime group: 'javax.servlet', name: 'jstl', version: '1.2'
+	runtime group: 'taglibs', name:'standard', version: '1.1.2'
+	
+	//** Logging
+/*	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.5.11'
+	compile group: 'ch.qos.logback', name: 'logback-core', version: '0.9.19'
+	compile group: 'ch.qos.logback', name: 'logback-access', version: '0.9.19'
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.19'*/
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.6.1'
+	compile group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
+	compile group: 'ch.qos.logback', name: 'logback-access', version: '0.9.28'
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
+	
+	//** Database
+	compile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+	
+	compile group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
+	compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
+	runtime group: 'org.hibernate', name: 'hibernate-c3p0', version: versions['hibernate-core']
+	
+	compile name: 'stripesstuff', version: '0.1'
+	
+	/*
+	compile group: 'gripes', name: 'gripersist', version: versions['gripersist']
+	compile group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
+	*/
+	
+	compile project(":gripersist")
+	compile project(":gripes-web")
+	
+	//** Gripes Addons
+	compile fileTree(dir: 'addons', includes: ['**/bin/*.jar'])
+}
+
+repositories {
+    mavenCentral()
+    mavenRepo urls: "http://www.gripes-project.org/libs"
+}
+
+sourceSets {
+    main {
+		compileClasspath += configurations.provided
+        java { srcDir 'src' }
+        groovy { srcDir 'src' }
+        resources { srcDir 'resources' }
+    }
+}

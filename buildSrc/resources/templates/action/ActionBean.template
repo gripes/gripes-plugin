@@ -1,0 +1,60 @@
+package PACKAGE.action
+
+import BASEPACKAGE.action.base.BaseActionBean
+import net.sourceforge.stripes.action.Resolution
+import net.sourceforge.stripes.action.DefaultHandler
+import net.sourceforge.stripes.action.HandlesEvent
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import PACKAGE.dao.MODELDao
+import PACKAGE.model.MODEL
+
+import net.sourceforge.stripes.validation.Validate
+import org.stripesstuff.stripersist.EntityTypeConverter
+
+class MODELActionBean extends BaseActionBean {
+	Logger logger = LoggerFactory.getLogger(MODELActionBean.class)
+	
+	@Validate(converter=EntityTypeConverter.class)
+	MODEL_FIELD
+	
+	@HandlesEvent("view") Resolution view() {
+		forward("view")
+	}
+
+	@HandlesEvent("list") Resolution list() {
+		forward("list") { request ->
+			request.setAttribute("list",MODEL.list())
+		}
+	}
+
+	@HandlesEvent("create") Resolution create() {
+		forward("create")
+	}
+
+	@HandlesEvent("edit") Resolution edit() {
+		forward("edit")
+	}
+
+	@HandlesEvent("save") Resolution save() {
+		if(context.request.parameterMap["__fp"]){
+			MODELDao dao = new MODELDao()
+			dao.save(MODELL)
+			dao.commit()
+			
+			redirect(this.class, "view")
+		}
+		
+		redirect(this.class, "list")
+	}
+	
+	@HandlesEvent("delete") Resolution delete() {
+		MODELDao dao = new MODELDao()
+		dao.delete(MODELL)
+		dao.commit()
+		
+		redirect(this.class, "list")
+	}
+}

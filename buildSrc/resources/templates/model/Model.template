@@ -1,0 +1,9 @@
+package PACKAGE.model
+
+import BASEPACKAGE.model.base.BaseModel
+
+import javax.persistence.Entity;
+
+@Entity
+class MODEL extends BaseModel implements Serializable {	
+}

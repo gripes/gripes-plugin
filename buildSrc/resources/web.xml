@@ -1,0 +1,65 @@
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd" version="2.4">
+	
+	<display-name>PROJECTNAME</display-name>
+	
+  <context-param>
+    <param-name>GripesPackage</param-name>
+    <param-value>PACKAGE</param-value>
+  </context-param>
+	<listener>
+	 	<listener-class>net.sf.gripes.util.GripesContextListener</listener-class>
+  </listener>
+
+	<filter>
+ 		<display-name>Stripes Filter</display-name>
+ 		<filter-name>StripesFilter</filter-name>
+		<filter-class>net.sourceforge.stripes.controller.StripesFilter</filter-class>
+		<init-param>
+			<param-name>ActionResolver.Class</param-name>
+		 	<param-value>net.sf.gripes.util.GripesActionResolver</param-value>
+		</init-param>
+		<init-param>
+			<param-name>ActionResolver.Packages</param-name>
+		 	<param-value>ACTIONPACKAGES</param-value>
+		</init-param>
+		<init-param>
+	    <param-name>ActionBeanContext.Class</param-name>
+	    <param-value>PACKAGE.util.base.BaseActionBeanContext</param-value>
+		</init-param>
+		<init-param>
+			<param-name>StripersistInit.Classes</param-name>
+			<param-value>net.sf.gripes.db.GripesStripersistInit</param-value>
+	  </init-param>
+		<init-param>
+			<param-name>Extension.Packages</param-name>
+			<param-value>
+		 		net.sf.gripes.stripersist,
+				net.sf.gripes.util.GripesActionResolver,
+				net.sf.gripes.interceptor
+		 	</param-value>
+		</init-param>
+	</filter>
+	
+	<filter>
+		<filter-name>DynamicMappingFilter</filter-name>
+		<filter-class>
+			net.sourceforge.stripes.controller.DynamicMappingFilter
+		</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>DynamicMappingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>INCLUDE</dispatcher>
+	</filter-mapping>
+	
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+	
+	<session-config>
+  	<session-timeout>3600</session-timeout>
+  </session-config>
+</web-app>

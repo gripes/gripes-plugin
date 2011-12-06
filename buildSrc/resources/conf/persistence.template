@@ -1,0 +1,40 @@
+
+	<persistence-unit name="[NAME]"> 
+	    <provider>org.hibernate.ejb.HibernatePersistence</provider> 
+	
+		[CLASSES]
+	
+	    <properties> 
+			<!--
+			<property name="hibernate.archive.autodetection" value="class"/>
+			-->
+			[AUTO]
+		
+		    <property name="hibernate.show_sql" value="true" />
+
+			<!-- Hibernate and the SQL schema (validate, create-drop, create, update)--> 
+			<property name="hibernate.hbm2ddl.auto" value="[DBSCHEMA]"/> 
+
+			<!-- Tell Hibernate to use HSQLDB --> 
+			<property name="hibernate.dialect" value="[DBDIALECT]"/> 
+			<property name="hibernate.connection.driver_class" value="[DBDRIVER]"/> 
+			
+			<property name="debug" value="true" />
+
+			<!-- Configure the JDBC database connection --> 
+			<property name="hibernate.connection.url" value="[DBURL]" />
+			<property name="hibernate.connection.username" value="[DBUSER]"/> 
+			<property name="hibernate.connection.password" value="[DBPASSWORD]"/> 
+		
+			<property name="jdbc.batch_size" value="0"/> 
+
+			<!-- Configure the connection pool --> 
+			<property name="hibernate.c3p0.min_size" value="5"/> 
+			<property name="hibernate.c3p0.max_size" value="20"/> 
+			<property name="hibernate.c3p0.timeout" value="300"/> 
+			<property name="hibernate.c3p0.max_statements" value="50"/> 
+			<property name="hibernate.c3p0.idle_test_period" value="3000"/> 
+			
+			[ADDITIONAL]
+	    </properties> 
+	</persistence-unit> 

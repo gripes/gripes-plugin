@@ -1,0 +1,124 @@
+apply {
+	plugin 'java'
+	plugin 'groovy'
+}
+
+sourceCompatibility = 1.6
+
+logger.quiet "Building the Gripes Plugin"
+
+group = 'gripes'
+archivesBaseName = 'gripes-plugin'
+libsDirName = "libs/${group}/${archivesBaseName}/${version}"
+version = '0.1.8'
+
+versions = [
+	'gripes-web' : '0.1.7',
+	'gripes-plugin' : '0.1.7',
+	'gripersist' : '0.1.1',
+	'hibernate-core' : '4.0.0.Beta2'
+]
+
+repositories {
+    mavenCentral()
+    mavenRepo urls: "http://www.gripes-project.org/libs"
+    mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
+    mavenRepo name: "jboss-public", urls: "https://repository.jboss.org/nexus/content/groups/public/"
+}
+
+sourceSets {
+	main {
+		groovy { srcDir 'src' }
+	    resources { srcDir 'resources' }
+	}	
+	test {
+		groovy { srcDir 'test' }
+	    resources { srcDir 'test' }
+	}	
+}
+
+configurations {
+	ftpAntTask {}
+	provided {}
+}
+
+dependencies {	
+	//** Gradle API
+	compile gradleApi()
+	
+	//** Ant FTP
+	ftpAntTask module("org.apache.ant:ant-commons-net:1.7.0") {
+        module("commons-net:commons-net:1.4.1") {
+            dependencies("oro:oro:2.0.8@jar")
+        }
+    }
+    
+	//** Groovy
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.10'
+	
+	//** Jetty
+	compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.26'
+	
+	//** Servlet
+	compile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+
+	//** Framework
+	compile group: 'net.sourceforge.stripes', name: 'stripes', version: '1.5.6'
+	
+	//** Database
+	compile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+	
+	//** Hibernate
+	compile group: 'org.hibernate', name: 'hibernate-annotations', version: '3.5.6-Final'
+	compile group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
+	compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
+	runtime group: 'org.hibernate', name: 'hibernate-c3p0', version: versions['hibernate-core']
+	
+	compile group: 'javax.persistence', name: 'persistence-api', version: '1.0'
+	
+	compile group: 'gripes', name: 'gripersist', version: '0.1.1'
+	compile group: 'gripes', name: 'gripes-web', version: '0.1.7'
+	
+	testCompile 'junit:junit:4.7'
+	
+	//** For archiving
+	archives group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'	
+	
+	archives group: 'org.hibernate', name: 'hibernate-annotations', version: '3.5.6-Final'
+	archives group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
+	archives group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
+	archives group: 'org.hibernate', name: 'hibernate-c3p0', version: versions['hibernate-core']
+	
+	archives group: 'javax.persistence', name: 'persistence-api', version: '1.0'
+	
+	archives group: 'gripes', name:'gripes-web', version: '0.1.7'
+}
+
+uploadArchives {
+    repositories {
+       flatDir(dirs: file('repos'))
+    }
+}
+uploadArchives.doLast {
+	ant {
+		taskdef(name: 'ftp',
+                classname: 'org.apache.tools.ant.taskdefs.optional.net.FTP',
+                classpath: configurations.ftpAntTask.asPath)
+		
+		ftp(action: "mkdir",
+			server: "www.gripes-project.org", 
+			remotedir: "${ftpUploadRoot}/libs/gripes/gripes-plugin/${version}",
+			chmod: "0755",
+			userid: ftpUploadUser,
+			password: ftpUploadPassword)
+		
+		ftp(action: "put",
+			server: "www.gripes-project.org", 
+			remotedir: "${ftpUploadRoot}/libs/gripes/gripes-plugin/${version}",
+			chmod: "0755",
+			userid: ftpUploadUser,
+			password: ftpUploadPassword) {
+			fileset(dir:"repos", includes: "*${version}.*")
+		}
+    }
+}
