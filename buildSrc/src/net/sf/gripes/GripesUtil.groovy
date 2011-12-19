@@ -82,7 +82,14 @@ class GripesUtil {
 		
 		def addonConfig
 		addons.each { addon ->
-			addonConfig = new File(((addon=~/-src/).find())?("gripes-addons/"+addon.replace("-src","")+"/gripes.addon"):("addons/${it}/gripes.addon"))
+			if((addon=~/-src/).find()) {
+				addonConfig = new File("gripes-addons/"+addon.replace("-src","")+"/gripes.addon")
+			} else if(new File("addons/${addon}/gripes.addon").exists()) {
+				addonConfig = new File("addons/${addon}/gripes.addon")
+			} else {
+				addonConfig = new File("../${addon}/gripes.addon")
+			}
+
 			def config = new ConfigSlurper().parse(addonConfig.text)
 			jpaTemplate = jpaTemplate.replaceAll(/\[ADDITIONAL\]/,"[ADDITIONAL]"+((config.persistence.size()>0)?config.persistence:''))
 		}

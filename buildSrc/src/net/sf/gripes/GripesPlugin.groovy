@@ -91,8 +91,10 @@ class GripesPlugin implements Plugin<Project> {
 			if(configFile.exists()) {
 				def gripesConfig = new ConfigSlurper().parse(configFile.text)
 				gripesConfig.addons.each {
-					logger.debug "Adding: gripes-addons/{}/src/main/groovy to the sourceSet", it.replaceAll('-src','')
-					project.sourceSets.main.groovy.srcDirs += new File("gripes-addons/${it.replaceAll('-src','')}/src/main/groovy")
+//					project.sourceSets.main.groovy.srcDirs +=
+					project.sourceSets.main.groovy.srcDirs += findAddon(it, project)
+//					println "Adding: gripes-addons/${it.replaceAll('-src','')}/src/main/groovy to the sourceSet"
+//					project.sourceSets.main.groovy.srcDirs += new File("gripes-addons/${it.replaceAll('-src','')}/src/main/groovy")
 				}
 			}
 		}
@@ -111,7 +113,11 @@ class GripesPlugin implements Plugin<Project> {
 			}
 			
 			GripesCreate creator = new GripesCreate([project: project])
-			creator.install(project.properties.addon)
+			
+			if(project.properties.dir)
+				creator.install(project.properties.addon, project.properties.dir) 
+			else
+				creator.install(project.properties.addon)
 		}
 		
 		def warTask = project.getTasks().getByPath("war")
@@ -160,6 +166,18 @@ class GripesPlugin implements Plugin<Project> {
 			}
 		}
     }
+	
+	private def findAddon(addon, project) {
+		def srcDir
+		
+		if(new File("gripes-addons/${addon.replaceAll('-src','')}/src").exists()){
+			srcDir = new File("gripes-addons/${addon.replaceAll('-src','')}/src")
+		} else if(new File("../${addon.replaceAll('-src','')}/src").exists()) {
+			srcDir = new File("../${addon.replaceAll('-src','')}/src")
+		}
+		
+		srcDir		
+	}
 
 	private def copyWebXml(project) {
 	    def webXmlText = getResource("web.xml").text

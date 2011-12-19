@@ -1,6 +1,10 @@
+
 package net.sf.gripes
 
 import javax.persistence.Column
+
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -183,6 +187,10 @@ class GripesCreate {
 	 * Creates a Stripes ActionBean for a previously created Model
 	 *
 	 * TODO Check for packageBase from command line, then use default
+	 * 
+	 * @author clmarquart
+	 * @param name String representing the name of the model to create the ActionBean from
+	 * @param pkg String representing the base package to put the new ActionBean in
 	 */
 	def action(name, pkg) {
 		logger.info "Creating {} ActionBean in Package: {}", name, pkg
@@ -214,8 +222,8 @@ class GripesCreate {
 		gripesProps.store(new FileOutputStream(new File("conf/gripes.properties")), null)
 		
 		urlLoader = (URLClassLoader) this.class.classLoader
-		urlLoader.addURL(new File("build/classes/main/").toURL())
-		urlLoader.addURL(new File("gripes-web/build/classes/main/").toURL())
+		urlLoader.addURL(new File("build/classes/main/").toURI().toURL())
+		urlLoader.addURL(new File("gripes-web/build/classes/main/").toURI().toURL())
 		
 		createViews(name, urlLoader.findClass("${pkg?:GripesUtil.getSettings(project).packageBase}.model.${name}"), pkg)	
 	}
@@ -229,25 +237,49 @@ class GripesCreate {
 		GripesUtil.getSettings(project).packageBase = pkg?:GripesUtil.getSettings(project).packageBase
 		
 		urlLoader = (URLClassLoader) this.class.classLoader
-		urlLoader.addURL(new File("build/classes/main/").toURL())				
+		urlLoader.addURL(new File("build/classes/main/").toURI().toURL())				
 		
 		createViews(name, urlLoader.findClass("${GripesUtil.getSettings(project).packageBase}.model.${name}"), pkg)
 	}
 	
-	/**
-	 * Install the specified add-on.  
+	/**  
+	 * Install the specified addon to the provided directory
 	 * 
-	 * TODO Verify use of both source and jar addons, spec. the installer 
+	 * @param addon String name of the addon being installed
+	 * @param dir String directory to search the addon for
+	 */
+	def install(addon, dir) {
+		logger.info "Installing the {} add-on to {}.", addon, dir
+		
+		def gripesConfigFile = getGripesConfigFile()
+		def currentConfig = new ConfigSlurper().parse(gripesConfigFile.text)
+		
+		def addonConfig, installScript = "", installScriptFile
+		if(!hasAddon(addon)){
+			addonConfig = new ConfigSlurper().parse(new File("${dir}/${addon}/gripes.addon").text)
+		
+			installScriptFile = new File("${dir}/${addon}/gripes.install")
+		
+			if(installScriptFile.exists()) installScript = installScriptFile.text
+			
+			installAddon(addon, installScriptFile.parentFile, installScript, gripesConfigFile)
+		}
+	}
+	
+	/**
+	 * Install the specified addon to the default directory
+	 * 
+	 * @param addon String name of the addon being installed
 	 */
 	def install(addon) {
 		def addonName = addon
 		logger.info "Installing the {} add-on.", addon
 		
-		def gripesConfigFile = new File("resources/Config.groovy")
+		def gripesConfigFile = getGripesConfigFile()
 		def gripesConfig = gripesConfigFile.text
 		def currentConfig = new ConfigSlurper().parse(gripesConfig)
 		
-		if(!currentConfig.addons.find{it==addon}){
+		if(!hasAddon(addon)){
 			def addonConfig, installScript = "", installScriptFile, installScriptResource
 			if((addon=~/-src/).find()){
 				addon = addon.replaceFirst(/-src/,'')
@@ -270,23 +302,36 @@ class GripesCreate {
 				if(installScriptResource) installScript = installScriptResource.text
 				else installScript = new File("addons/${addon}/gripes.install").text
 			}
-		
-			if(installScript!=""){
-				URLClassLoader childLoader = new URLClassLoader ([new File("addons/${addon}/bin/${addon}.jar").toURL()] as URL[], this.class.classLoader);
 			
-				logger.info "Executing the ${addon} install script"
-				new GroovyShell(childLoader,new Binding([project: project, addonDir: installScriptFile.parentFile])).evaluate(installScript)
-			}
-		
-			if((gripesConfig =~ /addons\s*=\s*\[\]/).find()){
-				gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[\s*\]/,'addons=["'+addonName+'"]')
-			} else {
-				gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[/,'addons=["'+addonName+'",')
-			}
-			gripesConfigFile.text = gripesConfig
+			installAddon(addon, installScriptFile.parentFile, installScript, gripesConfigFile)
 		} else {
 			logger.info "The $addon addon is already installed."
 		}
+	}
+	
+	private boolean hasAddon(addon) {
+		new ConfigSlurper().parse(getGripesConfigFile().text).addons.find{it==addon}
+	}
+	
+	private File getGripesConfigFile() {
+		new File("resources/Config.groovy")
+	}
+	
+	private def installAddon(addonName, addonDir, installScript, gripesConfigFile) {
+		def gripesConfig = gripesConfigFile.text
+		if(installScript!=""){
+			URLClassLoader childLoader = new URLClassLoader ([new File("addons/${addonName}/bin/${addonName}.jar").toURI().toURL()] as URL[], this.class.classLoader);
+		
+			logger.info "Executing the ${addonName} install script"
+			new GroovyShell(childLoader,new Binding([project: project, addonDir: addonDir])).evaluate(installScript)
+		}
+	
+		if((gripesConfig =~ /addons\s*=\s*\[\]/).find()){
+			gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[\s*\]/,'addons=["'+addonName+'"]')
+		} else {
+			gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[/,'addons=["'+addonName+'",')
+		}
+		gripesConfigFile.text = gripesConfig
 	}
 	
 	private def download(addon) {
@@ -331,8 +376,9 @@ class GripesCreate {
 	}
 
 	private def createViews(action, model,pkg) {
-		def fields = model.declaredFields.findAll { !it.isSynthetic() } // && it.getAnnotation(Column.class) }
-
+		def fields = model.declaredFields.findAll { Field f -> (!f.isSynthetic() && !Modifier.isStatic(f.getModifiers())) } 
+		println "FIELDS: ${fields}"
+		
 		[new File(GripesUtil.getRoot(project)+"/web/WEB-INF/jsp/${action.toLowerCase()}")].each{
 			if(!it.exists()){it.mkdirs()}
 		}
@@ -354,6 +400,7 @@ class GripesCreate {
 			file.createNewFile()
 			file.text =  createJspTemplate(model,newContents,"list,create","View", pkg)
 		}
+		
 		["edit","create"].each {
 			def file = new File(jspdir.canonicalPath+"/${it}.jsp")
 			def template = getResource("templates/jsp/${it}.template").text
@@ -377,6 +424,7 @@ class GripesCreate {
 			file.createNewFile()
 			file.text =  createJspTemplate(model,newContents,"list",it, pkg)
 		}
+		
 		["list"].each {
 			def newContents = ""
 			def file = new File(jspdir.canonicalPath+"/${it}.jsp")

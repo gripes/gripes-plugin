@@ -3,9 +3,15 @@ apply {
 }
 
 def gripesConfig = new ConfigSlurper().parse(new File("resources/Config.groovy").text)
+println "CONFIG: ${gripesConfig}"
 gripesConfig.addons.each {
+	println "ADDON: ${it}"
 	if(new File("gripes-addons/${it.replace('-src','')}/gripes.gradle").exists())
 		apply from: "gripes-addons/${it.replace('-src','')}/gripes.gradle"
+	if(new File("../${it.replace('-src','')}/gripes.gradle").exists()) {
+		println "FOUND ADDON: ${it}"
+		apply from: "../${it.replace('-src','')}/gripes.gradle"
+	}
 }
 
 gripes {
@@ -64,6 +70,7 @@ dependencies {
 	compile group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
 	*/
 	
+	compile project(":gripes-ast")
 	compile project(":gripersist")
 	compile project(":gripes-web")
 	

@@ -1,1 +1,1 @@
-includeFlat 'gripersist', 'gripes-web', 'gripes-ast'
+includeFlat 'gripes-ast','gripersist', 'gripes-web'
