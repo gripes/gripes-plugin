@@ -11,16 +11,16 @@ buildscript {
 	versions = [
 		'gripes-web' : '0.1.7',
 		'gripes-plugin' : '0.1.7',
-		'gripersist' : '0.1.1',
+		'gripersist' : '0.1.4',
 		'hibernate-core' : '4.0.0.Beta2'
 	]
 	
 	repositories {
 		mavenCentral()
-		mavenRepo urls: "http://www.gripes-project.org/libs"
-		mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
-		mavenRepo name: "jboss-public", urls: "https://repository.jboss.org/nexus/content/groups/public/"
-		mavenRepo name: "atlassian", urls: "https://maven.atlassian.com/content/groups/public/"
+		mavenRepo url: "http://www.gripes-project.org/libs"
+		mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
+		mavenRepo name: "jboss-public", url: "https://repository.jboss.org/nexus/content/groups/public/"
+		mavenRepo name: "atlassian", url: "https://maven.atlassian.com/content/groups/public/"
 	}
 	
 	dependencies {		
@@ -29,4 +29,8 @@ buildscript {
 		classpath group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
 		classpath group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
 	}
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '1.0-milestone-7'
 }

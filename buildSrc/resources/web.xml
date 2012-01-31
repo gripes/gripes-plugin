@@ -15,6 +15,8 @@
  		<display-name>Stripes Filter</display-name>
  		<filter-name>StripesFilter</filter-name>
 		<filter-class>net.sourceforge.stripes.controller.StripesFilter</filter-class>
+		<!--
+		-->
 		<init-param>
 			<param-name>ActionResolver.Class</param-name>
 		 	<param-value>net.sf.gripes.util.GripesActionResolver</param-value>

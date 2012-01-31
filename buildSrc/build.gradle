@@ -1,6 +1,19 @@
 apply {
 	plugin 'java'
 	plugin 'groovy'
+	plugin 'tomcat'
+}
+
+buildscript {
+	repositories {
+		add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+			name = 'GitHub'
+			addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+		}
+	}
+	dependencies {
+		classpath 'bmuschko:gradle-tomcat-plugin:0.8.2'
+	}
 }
 
 sourceCompatibility = 1.6
@@ -12,18 +25,26 @@ archivesBaseName = 'gripes-plugin'
 libsDirName = "libs/${group}/${archivesBaseName}/${version}"
 version = '0.1.8'
 
+
+def tomcatVersion = '6.0.35'
 versions = [
 	'gripes-web' : '0.1.7',
 	'gripes-plugin' : '0.1.7',
-	'gripersist' : '0.1.1',
-	'hibernate-core' : '4.0.0.Beta2'
+	'gripersist' : '0.1.4',
+	'hibernate-core' : '4.0.0.Beta2',
+	'tomcat' : '6.0.35'
 ]
 
 repositories {
     mavenCentral()
-    mavenRepo urls: "http://www.gripes-project.org/libs"
-    mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
-    mavenRepo name: "jboss-public", urls: "https://repository.jboss.org/nexus/content/groups/public/"
+    mavenRepo url: "http://www.gripes-project.org/libs"
+    mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
+    mavenRepo name: "jboss-public", url: "https://repository.jboss.org/nexus/content/groups/public/"
+	
+	add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+		name = 'GitHub'
+		addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+	}
 }
 
 sourceSets {
@@ -54,13 +75,8 @@ dependencies {
     }
     
 	//** Groovy
-	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.10'
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.2'
 	
-	//** Jetty
-	compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.26'
-	
-	//** Servlet
-	compile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
 
 	//** Framework
 	compile group: 'net.sourceforge.stripes', name: 'stripes', version: '1.5.6'
@@ -76,21 +92,29 @@ dependencies {
 	
 	compile group: 'javax.persistence', name: 'persistence-api', version: '1.0'
 	
-	compile group: 'gripes', name: 'gripersist', version: '0.1.1'
+	//** Jetty
+	compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.26'
+	
+	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
+			"org.apache.tomcat:coyote:${versions['tomcat']}",
+			"org.apache.tomcat:jasper:${versions['tomcat']}"
+	compile 'bmuschko:gradle-tomcat-plugin:0.8.2'
+
+	providedCompile group: 'javax.servlet', name: 'jstl', version: '1.2'
+	providedCompile group: 'taglibs', name:'standard', version: '1.1.2'	
+	
+	compile group: 'gripes', name: 'gripersist', version: versions['gripersist']
 	compile group: 'gripes', name: 'gripes-web', version: '0.1.7'
 	
 	testCompile 'junit:junit:4.7'
 	
 	//** For archiving
 	archives group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'	
-	
 	archives group: 'org.hibernate', name: 'hibernate-annotations', version: '3.5.6-Final'
 	archives group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
 	archives group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
 	archives group: 'org.hibernate', name: 'hibernate-c3p0', version: versions['hibernate-core']
-	
 	archives group: 'javax.persistence', name: 'persistence-api', version: '1.0'
-	
 	archives group: 'gripes', name:'gripes-web', version: '0.1.7'
 }
 

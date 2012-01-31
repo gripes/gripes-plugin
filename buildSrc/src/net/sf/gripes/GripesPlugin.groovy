@@ -7,6 +7,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.tasks.SourceSet
 import javax.persistence.Column
 
+import org.gradle.api.plugins.tomcat.TomcatRun
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -80,14 +82,21 @@ class GripesPlugin implements Plugin<Project> {
 				return null
 			}
 						
-			def jetty = new GripesJetty(project: project)
-			
-			jetty.webAppSourceDirectory = new File(project.projectDir.canonicalPath+"/web")
-			jetty.start()
+			def serverType = project.convention.plugins.gripes.server.type
+			def server
+			if(serverType.equals('tomcat')) {
+				server = new GripesTomcat()
+			} else {
+				server = new GripesJetty()
+				server.webAppSourceDirectory = new File(project.projectDir.canonicalPath+"/web")
+			}
+			server.project = project			
+			server.start()
 		}
 		runTask.dependsOn<<project.compileGroovy
 		runTask.configure {
 			def configFile = new File("resources/Config.groovy")
+			
 			if(configFile.exists()) {
 				def gripesConfig = new ConfigSlurper().parse(configFile.text)
 				gripesConfig.addons.each {
@@ -100,10 +109,18 @@ class GripesPlugin implements Plugin<Project> {
 		}
 		
 		def stopTask = project.task('stop') << {
-			project.convention.plugins.gripes.server.each {k,v->
-				project.jettyStop[k] = v
+			def serverType = project.convention.plugins.gripes.server.type
+			
+			def server
+			if(serverType.equals('tomcat')) {
+				server = new GripesTomcat()
+				server.stop()
+			} else {			
+				project.convention.plugins.gripes.server.each { k, v ->
+					project.jettyStop[k] = v
+				}
+				project.jettyStop.execute()
 			}
-			project.jettyStop.execute()
 		}
 		
 		def installTask = project.task('install') << {
