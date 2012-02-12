@@ -25,8 +25,6 @@ archivesBaseName = 'gripes-plugin'
 libsDirName = "libs/${group}/${archivesBaseName}/${version}"
 version = '0.1.8'
 
-
-def tomcatVersion = '6.0.35'
 versions = [
 	'gripes-web' : '0.1.7',
 	'gripes-plugin' : '0.1.7',
@@ -75,7 +73,7 @@ dependencies {
     }
     
 	//** Groovy
-	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.2'
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.4'
 	
 
 	//** Framework

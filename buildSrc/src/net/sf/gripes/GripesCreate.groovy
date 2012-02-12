@@ -160,7 +160,7 @@ class GripesCreate {
 	 * Creates a JPA Entity model object
 	 * 
 	 * TODO Check for packageBase from command line, then use default
-	 * TODO Fix GripesUtil call to get pkg folder, need to use cmd line
+	 * FIXME Fix GripesUtil call to get pkg folder, need to use cmd line
 	 */
 	def model(name, pkg) {
 		logger.info "Creating {} Model in Package: {}", name, pkg

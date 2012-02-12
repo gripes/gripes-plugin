@@ -20,11 +20,14 @@ die ( ) {
 
 GRADLE_CMD=""
 
-if [ "$1" = "create" ]
-then
-	GRADLE_CMD="-P$2"
-else
-	GRADLE_CMD=""
-fi
-
-exec "./gradlew" $1 $GRADLE_CMD
+for ARG in "$@"
+do
+	if [[ $ARG =~ = ]];
+	then 
+		GRADLE_CMD="$GRADLE_CMD -P$ARG"
+	else
+		GRADLE_CMD="$GRADLE_CMD $ARG"
+	fi
+done
+echo $GRADLE_CMD
+exec "./gradlew" $GRADLE_CMD

@@ -46,9 +46,6 @@ class GripesUtil {
 		}
 	}
 	
-	/*
-		TODO Use addons from Config.groovy to make additions to the persistence.xml (i.e. gripes-search)
-	*/
 	static String createJpaFile(dbConfig, addons){
 		def jpaTemplate = """
 <persistence xmlns="http://java.sun.com/xml/ns/persistence"

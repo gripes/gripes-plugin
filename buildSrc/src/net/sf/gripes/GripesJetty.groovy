@@ -103,8 +103,11 @@ class GripesJetty {
 		}
 		
 		// TODO Create a list of actions for Action.Packages in the web.xml
-/*		def gripesProps = new ConfigSlurper().parse(new File('conf/gripes.groovy').toURL())
-		def actionClasses = gripesProps.actions.join(",")*/
+		/* Revisit - this must not've worked.
+		def gripesProps = new ConfigSlurper().parse(new File('conf/gripes.groovy').toURL())
+		def actionClasses = gripesProps.actions.join(",")
+		*/
+		
 		def gripesProps = new Properties()
 		new File("conf/gripes.properties").withInputStream { 
 		  stream -> gripesProps.load(stream) 

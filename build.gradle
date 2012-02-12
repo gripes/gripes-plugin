@@ -6,13 +6,18 @@ apply {
 
 if(file("conf/gripes-basic.gradle").exists()) apply from: "conf/gripes-basic.gradle"
 
+gripes {
+	server.type = 'tomcat'
+	packageBase = 'net.sf'
+}
+
 buildscript {
-		
 	versions = [
 		'gripes-web' : '0.1.7',
 		'gripes-plugin' : '0.1.7',
 		'gripersist' : '0.1.4',
-		'hibernate-core' : '4.0.0.Beta2'
+		'hibernate-core' : '4.0.0.Beta2',
+		'tomcat' : '6.0.35'
 	]
 	
 	repositories {

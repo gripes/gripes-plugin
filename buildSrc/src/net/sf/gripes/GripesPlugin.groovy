@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
  * Creates the following tasks: init, setup, create, run, stop, and delete
  * 
  * TODO hook into War task to ensure correct packaging	
- * TODO Create GripesException class for handling sequence errorsbu basePackage
+ * TODO Create GripesException class for handling sequence errors
  */
 class GripesPlugin implements Plugin<Project> {
 	Logger logger = LoggerFactory.getLogger(GripesPlugin.class)
@@ -41,6 +41,10 @@ class GripesPlugin implements Plugin<Project> {
 		}
 		
 		def initTask = project.task('init') << {
+			if(new File("src").exists()){
+				logger.error "GripesSequenceError: `gradle init` has already been run."
+				return null
+			} 
 			GripesCreate creator = new GripesCreate([project: project])
 			creator.init()
 		}

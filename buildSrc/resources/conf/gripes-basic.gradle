@@ -1,15 +1,13 @@
 apply {
-	plugin 'jetty'	
+	plugin 'jetty'
+	plugin 'tomcat'	
 }
 
 def gripesConfig = new ConfigSlurper().parse(new File("resources/Config.groovy").text)
-println "CONFIG: ${gripesConfig}"
 gripesConfig.addons.each {
-	println "ADDON: ${it}"
 	if(new File("gripes-addons/${it.replace('-src','')}/gripes.gradle").exists())
 		apply from: "gripes-addons/${it.replace('-src','')}/gripes.gradle"
 	if(new File("../${it.replace('-src','')}/gripes.gradle").exists()) {
-		println "FOUND ADDON: ${it}"
 		apply from: "../${it.replace('-src','')}/gripes.gradle"
 	}
 }
@@ -17,6 +15,7 @@ gripesConfig.addons.each {
 gripes {
 	appName = "Gripes Application"
 	server = [
+		type: "jetty",
 		contextPath : "/gripes",
 		webAppSourceDirectory : file("web"),
 		httpPort : 8888,
@@ -36,7 +35,7 @@ configurations {
 
 dependencies {
 	//** Groovy
-	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.10'
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.4'
 	
 	//** Framework
 	compile group: 'net.sourceforge.stripes', name: 'stripes', version: '1.5.6'
@@ -47,14 +46,15 @@ dependencies {
 	runtime group: 'taglibs', name:'standard', version: '1.1.2'
 	
 	//** Logging
-/*	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.5.11'
-	compile group: 'ch.qos.logback', name: 'logback-core', version: '0.9.19'
-	compile group: 'ch.qos.logback', name: 'logback-access', version: '0.9.19'
-	compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.19'*/
 	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.6.1'
 	compile group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
 	compile group: 'ch.qos.logback', name: 'logback-access', version: '0.9.28'
 	compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
+	
+	//** Tomcat
+	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
+			"org.apache.tomcat:coyote:${versions['tomcat']}",
+			"org.apache.tomcat:jasper:${versions['tomcat']}"
 	
 	//** Database
 	compile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
@@ -80,7 +80,7 @@ dependencies {
 
 repositories {
     mavenCentral()
-    mavenRepo urls: "http://www.gripes-project.org/libs"
+    mavenRepo url: "http://www.gripes-project.org/libs"
 }
 
 sourceSets {

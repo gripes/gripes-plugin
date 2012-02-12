@@ -8,7 +8,7 @@ class GripesPluginConvention {
 	String httpPort
 	String stopPort
 	String webappSource
-	def server
+	Map server = [:]
 	def addons
 
     def gripes(Closure closure) {
