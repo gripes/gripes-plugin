@@ -7,7 +7,7 @@ apply {
 if(file("conf/gripes-basic.gradle").exists()) apply from: "conf/gripes-basic.gradle"
 
 gripes {
-	server.type = 'tomcat'
+//	server.type = 'tomcat'
 	packageBase = 'net.sf'
 }
 

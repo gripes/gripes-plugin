@@ -71,7 +71,9 @@ dependencies {
 	*/
 	
 	compile project(":gripes-ast")
-	compile project(":gripersist")
+	compile(project(":gripersist")) {
+		changing = true
+	}
 	compile project(":gripes-web")
 	
 	//** Gripes Addons

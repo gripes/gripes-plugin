@@ -1,6 +1,6 @@
 
-	<persistence-unit name="[NAME]"> 
-	    <provider>org.hibernate.ejb.HibernatePersistence</provider> 
+	<persistence-unit name="[NAME]" transaction-type="RESOURCE_LOCAL"> 
+	    <provider>org.hibernate.ejb.HibernatePersistence</provider>
 	
 		[CLASSES]
 	
@@ -8,33 +8,55 @@
 			<!--
 			<property name="hibernate.archive.autodetection" value="class"/>
 			-->
+			
 			[AUTO]
 		
 		    <property name="hibernate.show_sql" value="true" />
 
-			<!-- Hibernate and the SQL schema (validate, create-drop, create, update)--> 
-			<property name="hibernate.hbm2ddl.auto" value="[DBSCHEMA]"/> 
+			<!-- Hibernate and the SQL schema (validate, create-drop, create, update)-->
+			<!-- 
+			--> 
+			<property name="hibernate.hbm2ddl.auto" value="[DBSCHEMA]"/>
 
 			<!-- Tell Hibernate to use HSQLDB --> 
+			<!--
+			-->
 			<property name="hibernate.dialect" value="[DBDIALECT]"/> 
-			<property name="hibernate.connection.driver_class" value="[DBDRIVER]"/> 
-			
+			<property name="hibernate.connection.driver_class" value="[DBDRIVER]"/>
 			<property name="debug" value="true" />
 
 			<!-- Configure the JDBC database connection --> 
+			<!--
+			-->
 			<property name="hibernate.connection.url" value="[DBURL]" />
 			<property name="hibernate.connection.username" value="[DBUSER]"/> 
-			<property name="hibernate.connection.password" value="[DBPASSWORD]"/> 
-		
+			<property name="hibernate.connection.password" value="[DBPASSWORD]"/>
 			<property name="jdbc.batch_size" value="0"/> 
+			
+			<!--
+			<property name="javax.persistence.jdbc.driver" value="org.hsqldb.jdbcDriver"/>
+         	<property name="javax.persistence.jdbc.user" value="sa"/>
+	       	<property name="javax.persistence.jdbc.password" value=""/>
+         	<property name="javax.persistence.jdbc.url" value="jdbc:hsqldb:."/>
+         	<property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+         	<property name="hibernate.max_fetch_depth" value="3"/>
+         	
+         	<property name="hibernate.ejb.classcache.org.hibernate.ejb.test.Item" value="read-write"/>
+         	<property name="hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors" value="read-write, RegionName"/>
+       		-->
+         	<!-- cache configuration -->
+
 
 			<!-- Configure the connection pool --> 
+			<!--
+			-->
 			<property name="hibernate.c3p0.min_size" value="5"/> 
 			<property name="hibernate.c3p0.max_size" value="20"/> 
 			<property name="hibernate.c3p0.timeout" value="300"/> 
 			<property name="hibernate.c3p0.max_statements" value="50"/> 
 			<property name="hibernate.c3p0.idle_test_period" value="3000"/> 
 			
+			<!-- Additional Configurations from Addons -->
 			[ADDITIONAL]
 	    </properties> 
 	</persistence-unit> 
