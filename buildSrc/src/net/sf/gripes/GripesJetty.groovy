@@ -120,7 +120,7 @@ class GripesJetty {
 		webXml.text = webXmlTemplate
 						.replaceAll("ACTIONPACKAGES", gripesProps["actions"]?:GripesUtil.getSettings(project).packageBase+".action")
 						.replaceAll("PROJECTNAME",GripesUtil.getSettings(project).appName)
-						.replaceAll("PACKAGE",GripesUtil.getSettings(project).packageBase)
+						.replaceAll("PACKAGE",GripesUtil.getSettings(project).packageBase)		
 						
 						/*
 						.replaceAll(/\[PLUGINS\]/,",\n\t"+GripesUtil.getSettings(project).addons.join(",\n"))

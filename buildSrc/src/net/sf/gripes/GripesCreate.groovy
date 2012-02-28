@@ -1,4 +1,3 @@
-
 package net.sf.gripes
 
 import javax.persistence.Column

@@ -97,6 +97,7 @@ class GripesPlugin implements Plugin<Project> {
 			server.project = project			
 			server.start()
 		}
+		runTask.dependsOn<<project.clean
 		runTask.dependsOn<<project.compileGroovy
 		runTask.configure {
 			def configFile = new File("resources/Config.groovy")
@@ -150,8 +151,8 @@ class GripesPlugin implements Plugin<Project> {
 			
 			def dbConfig, mainConfig
 			try {
-				dbConfig = new ConfigSlurper().parse(new File('resources/DB.groovy').toURL())
-				mainConfig = new ConfigSlurper().parse(new File('resources/Config.groovy').toURL())	
+				dbConfig = new ConfigSlurper().parse(new File('resources/DB.groovy').toURI().toURL())
+				mainConfig = new ConfigSlurper().parse(new File('resources/Config.groovy').toURI().toURL())	
 			
 				def addons = mainConfig.addons
 			
@@ -171,7 +172,7 @@ class GripesPlugin implements Plugin<Project> {
 								.replaceAll("ACTIONPACKAGES", gripesProps["actions"])
 								.replaceAll("PROJECTNAME",GripesUtil.getSettings(project).appName)
 								.replaceAll("PACKAGE",GripesUtil.getSettings(project).packageBase)
-
+				
 				warTask.webInf { 
 					from(GripesUtil.getSettings(project).server.webAppSourceDirectory.name+"/WEB-INF")
 					from(warTask.getTemporaryDir().canonicalPath) {
