@@ -209,7 +209,3 @@ task pluginJar {
 //		classpath group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
 //	}
 //}
-//
-//task wrapper(type: Wrapper) {
-//	gradleVersion = '1.0-milestone-7'
-//}
