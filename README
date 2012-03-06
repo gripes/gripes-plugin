@@ -1,13 +1,35 @@
-Getting Started
+### To get started using Gripes 
+Checkout: https://github.com/gripes/gripes-example
 
-1. Download and Install Gradle
-2. Create folder for new app (i.e. ~/Sites/GripesApp)
-3. Create new file: 'build.gradle', with contents from http://www.gripes-project.org/build.gradle.txt
-4. Run: 'gradle init'
-5. Gripes will update your build.gradle file, edit the gripes{} section accordingly
-6. Run: 'gradle setup'
-7. First entity class: 'gradle create -Pmodel=Page'
-8. Edit the entity, adding properties (i.e. String name, description)
-9. Create actions: 'gradle create -Paction=Page'
-10. Run the app: 'gradle run'
-11. Browse: http://localhost:8888/gripes
+### To use Gripes within a current Gradle build:
+Add the following to `build.gradle`
+
+	buildscript { 
+		versions = [
+			'gripes-web' : '0.1.8',
+			'gripes-plugin' : '0.1.9',
+			'gripersist' : '0.1.5',
+			'hibernate-core' : '4.0.0.Beta2'
+		]
+		repositories {
+			mavenCentral()
+			mavenRepo urls: "http://www.gripes-project.org/libs"
+		}		
+		dependencies {
+			classpath group: 'gripes', name: 'gripes-plugin', version: versions['gripes-plugin']
+			classpath group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
+			classpath group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
+			classpath group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
+		}
+	}
+	
+Then
+
+1. Run: 'gradle init'
+2. Gripes will update your build.gradle file, edit the gripes{} section accordingly
+3. Run: 'gradle setup'
+4. First entity class: 'gradle create -Pmodel=Page'
+5. Edit the entity, adding properties (i.e. String name, description)
+6. Create actions: 'gradle create -Paction=Page'
+7. Run the app: 'gradle run'
+8. Browse: http://localhost:8888/gripes
