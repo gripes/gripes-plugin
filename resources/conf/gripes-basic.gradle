@@ -1,6 +1,6 @@
 apply {
 	plugin 'jetty'
-	plugin 'tomcat'	
+//	plugin 'tomcat'	
 }
 
 def gripesConfig = new ConfigSlurper().parse(new File("resources/Config.groovy").text)
@@ -52,9 +52,9 @@ dependencies {
 	compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
 	
 	//** Tomcat
-	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
-			"org.apache.tomcat:coyote:${versions['tomcat']}",
-			"org.apache.tomcat:jasper:${versions['tomcat']}"
+//	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
+//			"org.apache.tomcat:coyote:${versions['tomcat']}",
+//			"org.apache.tomcat:jasper:${versions['tomcat']}"
 	
 	//** Database
 	compile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
@@ -65,16 +65,13 @@ dependencies {
 	
 	compile name: 'stripesstuff', version: '0.1'
 	
-	/*
-	compile group: 'gripes', name: 'gripersist', version: versions['gripersist']
-	compile group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
-	*/
+	compile("gripes:gripes-ast:${versions['gripes-ast']}")
+	compile("gripes:gripersist:${versions['gripersist']}")
+	compile("gripes:gripes-web:${versions['gripes-web']}")
 	
-	compile project(":gripes-ast")
-	compile(project(":gripersist")) {
-		changing = true
-	}
-	compile project(":gripes-web")
+//	compile project(":gripes-ast")
+//	compile project(":gripersist")
+//	compile project(":gripes-web")
 	
 	//** Gripes Addons
 	compile fileTree(dir: 'addons', includes: ['**/bin/*.jar'])
@@ -88,7 +85,7 @@ repositories {
 sourceSets {
     main {
 		compileClasspath += configurations.provided
-        java { srcDir 'src' }
+
         groovy { srcDir 'src' }
         resources { srcDir 'resources' }
     }

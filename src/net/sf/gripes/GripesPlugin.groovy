@@ -158,7 +158,7 @@ class GripesPlugin implements Plugin<Project> {
 			
 				def jpaFile = new File(tempDir.canonicalPath+"/persistence.xml")
 				jpaFile.createNewFile()
-				jpaFile.text = GripesUtil.createJpaFile(dbConfig, mainConfig)
+				jpaFile.text = GripesUtil.createJpaFile(dbConfig, mainConfig.addons)
 
 				def gripesProps = new Properties()
 				new File("conf/gripes.properties").withInputStream { 

@@ -22,13 +22,13 @@ logger.quiet "Building the Gripes Plugin"
 
 group = 'gripes'
 archivesBaseName = 'gripes-plugin'
+version = '0.1.10'
 libsDirName = "libs/${group}/${archivesBaseName}/${version}"
-version = '0.1.8'
 
 versions = [
-	'gripes-web' : '0.1.7',
-	'gripes-plugin' : '0.1.7',
-	'gripersist' : '0.1.4',
+	'gripes-web' : '0.1.9',
+	'gripes-plugin' : '0.1.10',
+	'gripersist' : '0.1.6',
 	'hibernate-core' : '4.0.0.Beta2',
 	'tomcat' : '6.0.35'
 ]
@@ -93,16 +93,16 @@ dependencies {
 	//** Jetty
 	compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.26'
 	
-	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
-			"org.apache.tomcat:coyote:${versions['tomcat']}",
-			"org.apache.tomcat:jasper:${versions['tomcat']}"
+//	tomcat 	"org.apache.tomcat:catalina:${versions['tomcat']}",
+//			"org.apache.tomcat:coyote:${versions['tomcat']}",
+//			"org.apache.tomcat:jasper:${versions['tomcat']}"
 	compile 'bmuschko:gradle-tomcat-plugin:0.8.2'
 
 	providedCompile group: 'javax.servlet', name: 'jstl', version: '1.2'
 	providedCompile group: 'taglibs', name:'standard', version: '1.1.2'	
 	
 	compile group: 'gripes', name: 'gripersist', version: versions['gripersist']
-	compile group: 'gripes', name: 'gripes-web', version: '0.1.7'
+	compile group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
 	
 	testCompile 'junit:junit:4.7'
 	
@@ -116,6 +116,8 @@ dependencies {
 	archives group: 'gripes', name:'gripes-web', version: '0.1.7'
 }
 
+jar.enabled = true
+uploadArchives.setDependsOn([jar])
 uploadArchives {
     repositories {
        flatDir(dirs: file('repos'))
@@ -140,7 +142,7 @@ uploadArchives.doLast {
 			chmod: "0755",
 			userid: ftpUploadUser,
 			password: ftpUploadPassword) {
-			fileset(dir:"repos", includes: "*${version}.*")
+			fileset(dir:"build/libs/gripes/gripes-plugin/${version}", includes: "*${version}.*")
 		}
     }
 }

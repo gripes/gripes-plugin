@@ -3,8 +3,6 @@
 /.settings
 /build
 /.classpath
-/resources
-/src
 /web
 /conf
 /bin

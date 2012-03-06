@@ -78,19 +78,23 @@ class GripesUtil {
 		
 		
 		def addonConfig
-		addons.each { addon ->
-			if((addon=~/-src/).find()) {
-				addonConfig = new File("gripes-addons/"+addon.replace("-src","")+"/gripes.addon")
-			} else if(new File("addons/${addon}/gripes.addon").exists()) {
-				addonConfig = new File("addons/${addon}/gripes.addon")
-			} else {
-				addonConfig = new File("../${addon}/gripes.addon")
+		if(addons.size()>0) {
+			addons.each { addon ->
+				println "Adding: ${addon}"
+				if((addon=~/-src/).find()) {
+					addonConfig = new File("gripes-addons/"+addon.replace("-src","")+"/gripes.addon")
+				} else if(new File("addons/${addon}/gripes.addon").exists()) {
+					addonConfig = new File("addons/${addon}/gripes.addon")
+				} else {
+					addonConfig = new File("../${addon}/gripes.addon")
+				}
+	
+				def config = new ConfigSlurper().parse(addonConfig.text)
+				jpaTemplate = jpaTemplate.replaceAll(/\[ADDITIONAL\]/,"[ADDITIONAL]"+((config.persistence.size()>0)?config.persistence:''))
 			}
-
-			def config = new ConfigSlurper().parse(addonConfig.text)
-			jpaTemplate = jpaTemplate.replaceAll(/\[ADDITIONAL\]/,"[ADDITIONAL]"+((config.persistence.size()>0)?config.persistence:''))
+		} else {
+			jpaTemplate = jpaTemplate.replaceAll(/\[ADDITIONAL\]/,"")
 		}
-		jpaTemplate = jpaTemplate.replaceAll(/\[ADDITIONAL\]/,"")
 		jpaTemplate += "\n</persistence>\n"
 		jpaTemplate
 	}
