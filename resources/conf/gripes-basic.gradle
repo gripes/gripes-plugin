@@ -62,6 +62,7 @@ dependencies {
 	compile group: 'org.hibernate', name: 'hibernate-core', version: versions['hibernate-core']
 	compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: versions['hibernate-core']
 	runtime group: 'org.hibernate', name: 'hibernate-c3p0', version: versions['hibernate-core']
+	compile 'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final'
 	
 	compile name: 'stripesstuff', version: '0.1'
 	

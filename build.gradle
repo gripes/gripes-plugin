@@ -1,3 +1,5 @@
+import java.awt.event.ItemEvent;
+
 import org.gradle.plugins.ide.eclipse.model.SourceFolder
 
 apply {
@@ -25,7 +27,7 @@ logger.quiet "Building the Gripes Plugin"
 
 group = 'gripes'
 archivesBaseName = 'gripes-plugin'
-version = '0.1.11'
+version = '0.1.14'
 libsDirName = "libs/${group}/${archivesBaseName}/${version}"
 
 versions = [
@@ -77,10 +79,15 @@ dependencies {
 	
 	//** Groovy
 	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.4'
-	
 
 	//** Framework
 	compile group: 'net.sourceforge.stripes', name: 'stripes', version: '1.5.6'
+	
+	//** Logging
+	provided group: 'org.slf4j', name: 'slf4j-api', version: '1.6.2'
+	provided group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
+	provided group: 'ch.qos.logback', name: 'logback-access', version: '0.9.28'
+	provided group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
 	
 	//** Database
 	compile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
@@ -104,6 +111,7 @@ dependencies {
 	provided group: 'javax.servlet', name: 'jstl', version: '1.2'
 	provided group: 'taglibs', name:'standard', version: '1.1.2'
 	
+	compile 'gripes:gripes-ast:0.1.0'
 	compile group: 'gripes', name: 'gripersist', version: versions['gripersist']
 	compile group: 'gripes', name: 'gripes-web', version: versions['gripes-web']
 	
@@ -127,6 +135,10 @@ uploadArchives {
 	}
 }
 uploadArchives.doLast {
+	copy {
+		from '${libsDirName}'
+		into 'repos'
+	}
 	ant {
 		taskdef(name: 'ftp',
 				classname: 'org.apache.tools.ant.taskdefs.optional.net.FTP',
@@ -145,7 +157,7 @@ uploadArchives.doLast {
 			chmod: "0755",
 			userid: ftpUploadUser,
 			password: ftpUploadPassword) {
-			fileset(dir:"build/libs/gripes/gripes-plugin/${version}", includes: "*${version}.*")
+			fileset(dir:"repos", includes: "*${version}.*")
 		}
 	}
 }
@@ -159,15 +171,23 @@ eclipse {
 				xml."classpathentry".findAll{it."@kind"=="src" && it."@path".find("test")}*."@output"="bin/test"
 			}
 			whenMerged { classpath ->
-				classpath.entries.removeAll(classpath.entries.findAll{((it instanceof SourceFolder) && it.dir==null)})
+				classpath.entries.removeAll(classpath.entries.findAll{((it.kind=="src") && it.dir==null)})
 			}
 		}
 	}
 }
 task eclipseCp(dependsOn: [eclipseClasspath]) {}
 
-task pluginBuild(dependsOn: [jar]) {}
-task pluginJar {
+configurations.all {
+	resolutionStrategy.force 'org.slf4j:slf4j-api:1.6.2'
+}
+
+def pluginBuild = project.getTasks().add([name: "pluginBuild"])
+pluginBuild.doFirst {
+	file(project.tasks.jar.archivePath).delete()
+	jar.execute()
+}
+task pluginJar(dependsOn: [clean]) {
 	if(!file(project.tasks.jar.archivePath).exists())
-		project.tasks.jar.execute()
+		jar.execute()
 }

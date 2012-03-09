@@ -8,6 +8,10 @@ import java.lang.reflect.Modifier;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+/**
+ * 
+ * @author clmarquart
+ */
 class GripesCreate {
 	Logger logger = LoggerFactory.getLogger(GripesCreate.class)
 	def project
@@ -187,9 +191,10 @@ class GripesCreate {
 	 *
 	 * TODO Check for packageBase from command line, then use default
 	 * 
-	 * @author clmarquart
 	 * @param name String representing the name of the model to create the ActionBean from
 	 * @param pkg String representing the base package to put the new ActionBean in
+	 * 
+	 * @author clmarquart
 	 */
 	def action(name, pkg) {
 		logger.info "Creating {} ActionBean in Package: {}", name, pkg
@@ -232,7 +237,7 @@ class GripesCreate {
 	 * to be recreated.
 	 */
 	def views(name,pkg) {
-		logger.info "Creating Views for the {}ActionBean in Package: {}", name, pkg
+//		logger.info "Creating Views for the {}ActionBean in Package: {}", name, pkg
 		GripesUtil.getSettings(project).packageBase = pkg?:GripesUtil.getSettings(project).packageBase
 		
 		urlLoader = (URLClassLoader) this.class.classLoader
@@ -375,8 +380,10 @@ class GripesCreate {
 	}
 
 	private def createViews(action, model,pkg) {
-		def fields = model.declaredFields.findAll { Field f -> (!f.isSynthetic() && !Modifier.isStatic(f.getModifiers())) } 
-		println "FIELDS: ${fields}"
+		def fields = model.declaredFields.findAll { Field f -> 
+			(!f.isSynthetic() && !Modifier.isStatic(f.getModifiers()) && !f.name.equals('mappings')) 
+		} 
+		logger.debug "FIELDS: {}", fields
 		
 		[new File(GripesUtil.getRoot(project)+"/web/WEB-INF/jsp/${action.toLowerCase()}")].each{
 			if(!it.exists()){it.mkdirs()}

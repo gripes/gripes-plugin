@@ -1,7 +1,5 @@
 package net.sf.gripes
 
-import net.sf.gripes.*
-
 import static org.junit.Assert.*;
 import org.junit.*
 import org.gradle.api.*
@@ -26,4 +24,5 @@ class GripesPluginTest {
 		assertTrue(project.tasks.init instanceof Task)
 		assertTrue(project.tasks.create.dependsOn.contains(project.tasks.compileGroovy))
     }
+	
 }
