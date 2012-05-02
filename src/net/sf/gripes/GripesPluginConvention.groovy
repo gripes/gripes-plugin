@@ -2,6 +2,7 @@ package net.sf.gripes
 
 class GripesPluginConvention {
 	String appName
+	File base
 	String src
 	String resources
 	String packageBase

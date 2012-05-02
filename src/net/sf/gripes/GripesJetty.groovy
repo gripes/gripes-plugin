@@ -131,6 +131,7 @@ class GripesJetty {
 		// template, with the proper configuration
 		// createPersistenceXml()
 		
+		project.jettyRun.classpath += project.configurations.addons						
 		project.jettyRun.execute()
 	}
 	

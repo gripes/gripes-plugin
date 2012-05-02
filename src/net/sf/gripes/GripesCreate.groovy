@@ -25,35 +25,43 @@ class GripesCreate {
 	def delete() {
 		logger.info "Tearing down the Gripes project"
 		
+//		println "PROJ DIR: " + 
+//		String baseDirString = ((GripesPluginConvention) getPluginConvention("gripes")).base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
 		new AntBuilder().sequential {
-			delete(dir: "conf")
-			delete(dir: "src")
-			delete(dir: "resources")
-			delete(dir: "web")
-			delete(dir: "addons")
+			delete(dir: "${baseDirString}/conf")
+			delete(dir: "${baseDirString}/src")
+			delete(dir: "${baseDirString}/resources")
+			delete(dir: "${baseDirString}/web")
+			delete(dir: "${baseDirString}/addons")
 		}
 	}
 	
 	/**
 	 * Initializes a directory as a Gripes application.  Creates the folder structure,
 	 * gripes-basic` gradle script, and edits the build.gradle to use gripes-basic
+	 * 
+	 * FIXME This needs to use a property for the base folder directory, primarily for testing
 	 */
 	def init() {
+//		String baseDirString = ((GripesPluginConvention) getPluginConvention("gripes")).base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
+		
 		logger.info "Initializing Gripes project"
-
-		['src','resources','web','conf'].each {
-			def dir = new File("${it}")
-			if(!dir.exists()){
+		
+		['/src','/resources','/web','/conf'].each {
+			def dir = new File(baseDirString+"${it}")
+			if(!dir.exists()) {
 				dir.mkdirs()
 			}
 		}
 		
 		// TODO Config.groovy needs to create action list by default
 		['conf/gripes-basic.gradle','conf/gripes.properties','resources/Config.groovy'].each {
-			def newFile = new File("${it}")
+			def newFile = new File(baseDirString+"/"+it)
 			if(!newFile.exists()) {
 				newFile.createNewFile()
-				def tempFile = getResource("${it}")
+				def tempFile = getResource(it)
 				if(tempFile) {
 					newFile.text = tempFile.text
 				}
@@ -70,32 +78,37 @@ class GripesCreate {
 	def setup() {
 		logger.info "Setting up Gripes project"
 		
+//		String baseDirString = ((GripesPluginConvention) getPluginConvention("gripes")).base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
+		
 		[
 			'resources/DB.groovy','resources/Config.groovy',
 			'resources/StripesResources.properties',
 			'resources/logback.groovy',
 			'web/index.jsp'
 		].each {
-			def newFile = new File("${it}")
+			def newFile = new File(baseDirString+"/${it}")
 			if(!newFile.exists()) {
 				newFile.createNewFile()
 				def tempFile = getResource("${it}")
-				logger.debug "Creating: ${it} from ${tempFile}"
-				if(tempFile)
-					newFile.text = tempFile.text.replace("PACKAGE",GripesUtil.getSettings(project).packageBase)	
+				logger.debug "Creating: ${newFile} from ${tempFile}"
+				
+				if(tempFile) {
+					newFile.text = tempFile.text.replace("PACKAGE",GripesUtil.getSettings(project).packageBase)
+				}	
 			}
 		}
 		
 		// This is the META-INF for the persistence.xml file in the source folder
 		['META-INF'].each {
-			def dir = new File(GripesUtil.getSourceDir(project)+"/${it}")
+			def dir = new File(baseDirString+GripesUtil.getSourceDir(project)+"/${it}")
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
 		}
 		
 		['action/base','model/base','util','dao/base'].each {
-			def dir = new File(GripesUtil.getBasePackage(project)+"/${it}")
+			def dir = new File(baseDirString+GripesUtil.getBasePackage(project)+"/${it}")
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
@@ -111,15 +124,16 @@ class GripesCreate {
 		 'WEB-INF/work',
 		 'META-INF'
 		].each {
-			def dir = new File(GripesUtil.getRoot(project)+"/web/${it}")
+//			def dir = new File(GripesUtil.getRoot(project)+"/web/${it}")
+			def dir = new File(baseDirString+"/web/${it}")
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
 		}
 		
 		// Reference for file creation
-		def dir = new File(GripesUtil.getRoot(project)+"/web/WEB-INF/jsp/")
-		
+//		def dir = new File(GripesUtil.getRoot(project)+"/web/WEB-INF/jsp/")
+		def dir = new File(baseDirString+"/web/WEB-INF/jsp/")
 		[
 			"layout/main.jsp",
 			"includes/taglibs.jsp",
@@ -135,7 +149,7 @@ class GripesCreate {
 			"resources/StripesResources.properties",
 			"resources/import.groovy"
 		].each {
-			saveFile(new File(GripesUtil.getRoot(project)+"/${it}"),getResource(it).text)
+			saveFile(new File(baseDirString+"/${it}"),getResource(it).text)
 		}
 		
 		[
@@ -145,7 +159,7 @@ class GripesCreate {
 			"model/base/BaseModel.groovy"
 		].each {
 			saveFile(
-				new File(GripesUtil.getBasePackage(project)+"/${it}"),
+				new File(baseDirString+GripesUtil.getBasePackage(project)+"/${it}"),
 				getResource	("templates/${it}").text
 					.replaceAll("PACKAGE",GripesUtil.getSettings(project).packageBase)
 					.replaceAll("PKG","PACKAGE")
@@ -252,9 +266,10 @@ class GripesCreate {
 	 * @param addon String name of the addon being installed
 	 * @param dir String directory to search the addon for
 	 */
-	def install(addon, dir) {
+	def install(String addon, String dir) {
 		logger.info "Installing the {} add-on to {}.", addon, dir
 		
+		String baseDirString = gripesConvention.base.canonicalPath
 		def gripesConfigFile = getGripesConfigFile()
 		def currentConfig = new ConfigSlurper().parse(gripesConfigFile.text)
 		
@@ -262,9 +277,10 @@ class GripesCreate {
 		if(!hasAddon(addon)){
 			addonConfig = new ConfigSlurper().parse(new File("${dir}/${addon}/gripes.addon").text)
 		
-			installScriptFile = new File("${dir}/${addon}/gripes.install")
+			installScriptFile = new File("${baseDirString}/${dir}/${addon}/gripes.install")
 		
-			if(installScriptFile.exists()) installScript = installScriptFile.text
+			if(installScriptFile.exists()) 
+				installScript = installScriptFile.text
 			
 			installAddon(addon, installScriptFile.parentFile, installScript, gripesConfigFile)
 		}
@@ -275,39 +291,60 @@ class GripesCreate {
 	 * 
 	 * @param addon String name of the addon being installed
 	 */
-	def install(addon) {
+	def install(String addon) {
+        def gripesConvention = (GripesPluginConvention) project.getConvention().getPlugins().get("gripes")
+		
+//		String baseDirString = gripesConvention.base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
+		
 		def addonName = addon
 		logger.info "Installing the {} add-on.", addon
 		
+//		String baseDirString = gripesConvention.base.canonicalPath
 		def gripesConfigFile = getGripesConfigFile()
 		def gripesConfig = gripesConfigFile.text
 		def currentConfig = new ConfigSlurper().parse(gripesConfig)
 		
-		if(!hasAddon(addon)){
-			def addonConfig, installScript = "", installScriptFile, installScriptResource
+		if(!hasAddon(addon)) {
+			def addonConfig, 			// Slurped Config file
+				addonDir,
+				addonInstallName = "", 	// Name used for finding local addon directory 
+				installScriptFile, 		// Install script file
+				installScript = ""; 	// String contents of the installScriptFile
+				
+			// If we are installing a plugin from a local source folder...
 			if((addon=~/-src/).find()){
 				addon = addon.replaceFirst(/-src/,'')
 				addonConfig = new ConfigSlurper().parse(new File("gripes-addons/${addon}/gripes.addon").text)
 			
 				installScriptFile = new File("gripes-addons/${addon}/gripes.install")
-			
-				if(installScriptFile.exists()) installScript = installScriptFile.text
-			} else {		
-				makeDir(new File("addons/${addon}"))
-			
-				if(!new File("addons/${addon}/gripes.install").exists()) {
-					logger.info "Downloading the addon ${addon}"
-					download(addon)	
+							
+			// Else we need to try and use the `addon` configuration
+			} else {
+				//TODO the jar should be downloaded now add it to the current classpath and continue
+				URL[] myurl = [];
+				URLClassLoader urlLoader = new URLClassLoader(myurl, this.class.classLoader)
+				println "ADDONS: " + project.configurations.addons
+				project.configurations.addons.each { File file ->
+					println "Adding jar to loader: " + file.toURI().toURL()
+					urlLoader.addURL(file.toURI().toURL())
+				}
+				
+//				addonDir = makeDir(new File("${baseDirString}/addons/${addon}"))
+//				File addonJar = new File(addonDir.canonicalPath+"/bin/${addon}.jar")
+				
+				if (!urlLoader.findResource("gripes.install")) {
+					logger.info "gripes.install for the addon ${addon} is missing"
+					throw new MissingResourceException("gripes.install for the addon ${addon} is missing")
+					return null
 				}
 			
-				installScriptResource = new File("addons/${addon}/gripes.install") //getResource("addons/${addon}/gripes.install")
-				installScriptFile = installScriptResource
-				logger.info "InstallScript: {}", installScriptResource
-				if(installScriptResource) installScript = installScriptResource.text
-				else installScript = new File("addons/${addon}/gripes.install").text
+				installScriptFile = urlLoader.findResource("gripes.install")
+				
+				logger.info "InstallScript: {}", installScriptFile				
 			}
-			
-			installAddon(addon, installScriptFile.parentFile, installScript, gripesConfigFile)
+
+			installAddon(addon, addonDir, installScriptFile.text, gripesConfigFile)
 		} else {
 			logger.info "The $addon addon is already installed."
 		}
@@ -317,20 +354,40 @@ class GripesCreate {
 		new ConfigSlurper().parse(getGripesConfigFile().text).addons.find{it==addon}
 	}
 	
-	private File getGripesConfigFile() {
-		new File("resources/Config.groovy")
+	public File getGripesConfigFile() {
+		def gripesConvention = (GripesPluginConvention) project.getConvention().getPlugins().get("gripes")
+//		String baseDirString = gripesConvention.base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
+		
+		new File("${baseDirString}/resources/Config.groovy")
 	}
 	
+	// FIXME Somehow need to get the proper jar from the classpath configuration for the addons
+	//  maybe add the project.configurations.addon.runtime
 	private def installAddon(addonName, addonDir, installScript, gripesConfigFile) {
-		def gripesConfig = gripesConfigFile.text
-		if(installScript!=""){
-			URLClassLoader childLoader = new URLClassLoader ([new File("addons/${addonName}/bin/${addonName}.jar").toURI().toURL()] as URL[], this.class.classLoader);
+		println "Installing addon: ${installScript}"
 		
+//		String baseDirString = gripesConvention.base.canonicalPath
+		String baseDirString = project.projectDir.canonicalPath
+		
+        def gripesConvention = (GripesPluginConvention) project.getConvention().getPlugins().get("gripes")
+			
+		def gripesConfig = gripesConfigFile.text
+		
+		if(installScript!=""){
 			logger.info "Executing the ${addonName} install script"
+			
+//			URLClassLoader childLoader = new URLClassLoader ([new File("${baseDirString}addons/${addonName}/bin/${addonName}.jar").toURI().toURL()] as URL[], this.class.classLoader);
+			
+			URLClassLoader childLoader = new URLClassLoader ([] as URL[], this.class.classLoader);
+		
 			new GroovyShell(childLoader,new Binding([project: project, addonDir: addonDir])).evaluate(installScript)
 		}
 	
-		if((gripesConfig =~ /addons\s*=\s*\[\]/).find()){
+		/*
+		 * Place the addon name in the Config file, marked as installed. 
+		 */
+		if((gripesConfig =~ /addons\s*=\s*\[\]/).find()) {
 			gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[\s*\]/,'addons=["'+addonName+'"]')
 		} else {
 			gripesConfig = gripesConfig.replaceFirst(/addons\s*=\s*\[/,'addons=["'+addonName+'",')
@@ -338,34 +395,51 @@ class GripesCreate {
 		gripesConfigFile.text = gripesConfig
 	}
 	
+	// FIXME Need to compensate for proper directory.
 	private def download(addon) {
+        def gripesConvention = (GripesPluginConvention) project.getConvention().getPlugins().get("gripes")
+		String baseDirString = gripesConvention.base.canonicalPath
+		
 		[
-		 "addons/${addon}/bin"
+		 "${baseDirString}/addons/${addon}/bin"
 		].each {
 			def dir = new File("${it}")
 			if(!dir.exists()) dir.mkdirs()
 		}
-		def fos, out, file
-		["gripes.addon","gripes.install"].each {
-			def location = "addons/${addon}/${it}"
-				
-		    fos = new FileOutputStream(location)		
-			
-		    out = new BufferedOutputStream(fos)
-		    out << new URL("http://www.gripes-project.org/addons/${addon}/${it}").openStream()
-		    out.close()	
+		
+		def fos, out
+		FileOutputStream file
+		try {
+			["gripes.addon","gripes.install"].each {
+				def location = "${baseDirString}/addons/${addon}/${it}"
+				try {
+				    fos = new FileOutputStream(location)
+				    out = new BufferedOutputStream(fos)
+				    out << new URL("http://www.gripes-project.org/addons/${addon}/${it}").openStream()
+				    out.close()	
+				} catch (e) { 
+					logger.warn e.getMessage()
+					logger.warn "Remote file ($it) doesn't exist."
+					new File(location).text = ""
+				}
+			}
+		} catch (e) { 
+			e.printStackTrace()
 		}
 	
-	    file = new FileOutputStream("addons/${addon}/bin/${addon}.jar")
+	    file = new FileOutputStream("${baseDirString}/addons/${addon}/bin/${addon}.jar")
 	    out = new BufferedOutputStream(file)
 	    out << new URL("http://www.gripes-project.org/addons/${addon}/bin/${addon}.jar").openStream()
 	    out.close()
+		
+		return (new File("${baseDirString}/addons/${addon}/bin/${addon}.jar"))
 	}
 	
-	private def makeDir(parentFile) {
+	private File makeDir(File parentFile) {
 		if(!parentFile.exists()){
 			parentFile.mkdirs()
 		}
+		parentFile
 	}
 	
 	private def saveFile(file,template) {
@@ -575,6 +649,10 @@ class GripesCreate {
 			jpaXml.text = jpaXmlText.replaceAll("PACKAGE",GripesUtil.getSettings(project).packageBase)
 			jpaXml	
 		}
+	}
+	
+	private def getPluginConvention(String plugin) {
+		project.getConvention().getPlugins().get(plugin)
 	}
 	
 	private def getResource(resource) {

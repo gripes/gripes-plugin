@@ -1,22 +1,28 @@
 package net.sf.gripes
 
-import org.gradle.api.Project
 import org.gradle.api.Plugin
-import org.gradle.api.tasks.SourceSet
-import javax.persistence.Column
-
-import org.gradle.api.plugins.tomcat.TomcatRun
-
+import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginConvention
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
  * This is the heart of creating a Gripes application.
  * 
- * Creates the following tasks: init, setup, create, run, stop, and delete
+ * Creates the following new tasks: 
+ * 	init
+ * 	setup
+ * 	create
+ * 	run
+ * 	stop
+ * 	delete
+ * 
+ * Re-implements tasks:
+ * 	war
  * 
  * TODO hook into War task to ensure correct packaging	
  * TODO Create GripesException class for handling sequence errors
+ * FIXME Addons should install automatically using the `addon` configuration
  */
 class GripesPlugin implements Plugin<Project> {
 	Logger logger = LoggerFactory.getLogger(GripesPlugin.class)
@@ -31,7 +37,14 @@ class GripesPlugin implements Plugin<Project> {
 	 * Create the tasks for the plugin
 	 */
 	def void apply(Project project) {
-        project.convention.plugins.gripes = new GripesPluginConvention()
+		project.convention.plugins.gripes = new GripesPluginConvention()
+		
+		project.configurations.add "addons"
+		
+        def gripesConvention = (GripesPluginConvention) project.getConvention().getPlugins().get("gripes")
+		def javaConvention = (JavaPluginConvention) project.getConvention().getPlugins().get("java")
+		
+		def resourcesDir = javaConvention.sourceSets.test.resources.srcDirs.iterator()[0]
 
 		def deleteTask = project.task('delete') << {
 			GripesCreate creator = new GripesCreate([project: project])
@@ -39,8 +52,13 @@ class GripesPlugin implements Plugin<Project> {
 		}
 		
 		def initTask = project.task('init') << {
-			if(new File("src").exists()){
-				logger.error "GripesSequenceError: `gradle init` has already been run."
+//			println "Base: " + gripesConvention
+			def haveSourceFolder = project.sourceSets.main.groovy.srcDirs.find{it.exists()}
+//			println "SrcFlder: " + haveSourceFolder
+//			String baseDirString = gripesConvention.base.canonicalPath
+//			if(new File("${baseDirString}/src").exists()){
+			if(haveSourceFolder){
+				throw new IllegalStateException("GripesSequenceError: `gradle init` has already been run.")
 				return null
 			} 
 			GripesCreate creator = new GripesCreate([project: project])
@@ -48,18 +66,29 @@ class GripesPlugin implements Plugin<Project> {
 		}
 		
 		def setupTask = project.task('setup') << {
-			if(new File("src").exists()) {
+//			String baseDirString = gripesConvention.base.canonicalPath
+			String baseDirString = project.projectDir.canonicalPath
+			
+			if(new File("${baseDirString}/src").exists()) {
+				if(new File("${baseDirString}/src/META-INF").exists()){
+					throw new IllegalStateException("GripesSequenceError: `gradle setup` has already been run.")
+					return null
+				}
 				GripesCreate creator = new GripesCreate([project: project])
 				creator.setup()
 			} else {
-				logger.error "GripesSequenceError: You must first run `gradle init`."
+				throw new IllegalStateException("GripesSequenceError: You must first run `gradle init`.")
 				return null
 			}
 		}
 		
 		def createTask = project.task('create') << {
-			if(!(new File("resources/Config.groovy").exists())) {
-				logger.error "GripesSequenceError: You must first run `gradle init` and `gradle setup`."
+//			String baseDirString = gripesConvention.base.canonicalPath
+			String baseDirString = project.projectDir.canonicalPath
+			
+//			println "Config:  " + "${baseDirString}/resources/Config.groovy"
+			if(!(new File("${baseDirString}/resources/Config.groovy").exists())) {
+				throw new IllegalStateException("GripesSequenceError: You must first run `gradle init` and `gradle setup`.")
 				return null
 			}
 			GripesCreate creator = new GripesCreate([project: project])
@@ -80,7 +109,7 @@ class GripesPlugin implements Plugin<Project> {
 		 */
 		def runTask = project.task('run') << {task->
 			if(!(new File("resources/Config.groovy").exists())) {
-				logger.error "GripesSequenceError: You must first run `gradle init` and `gradle setup`."
+				throw new IllegalStateException("GripesSequenceError: You must first run `gradle init` and `gradle setup`.")
 				return null
 			}
 						
@@ -102,12 +131,15 @@ class GripesPlugin implements Plugin<Project> {
 			
 			if(configFile.exists()) {
 				def gripesConfig = new ConfigSlurper().parse(configFile.text)
-				gripesConfig.addons.each {
+//				project.configurations.addons.each {
+//					println "Addons: " + it
+//				}  
+//				gripesConfig.addons.each {
 //					project.sourceSets.main.groovy.srcDirs +=
-					project.sourceSets.main.groovy.srcDirs += findAddon(it, project)
+//					project.sourceSets.main.groovy.srcDirs += findAddon(it, project)
 //					println "Adding: gripes-addons/${it.replaceAll('-src','')}/src/main/groovy to the sourceSet"
 //					project.sourceSets.main.groovy.srcDirs += new File("gripes-addons/${it.replaceAll('-src','')}/src/main/groovy")
-				}
+//				}
 			}
 		}
 		
@@ -126,18 +158,28 @@ class GripesPlugin implements Plugin<Project> {
 			}
 		}
 		
+		/*
+		 * FIXME This should be able to run automatically using the `addon` configuration and check for uninstalled
+		 */
 		def installTask = project.task('install') << {
-			if(!(new File("resources/Config.groovy").exists())) {
-				logger.error "GripesSequenceError: You must first run `gradle init` and `gradle setup`."
+			String baseDirString = project.projectDir.canonicalPath
+
+			if(!(new File(baseDirString+"/resources/Config.groovy").exists())) {
+				throw new IllegalStateException("GripesSequenceError: You must first run `gradle init` and `gradle setup`.")
 				return null
 			}
 			
 			GripesCreate creator = new GripesCreate([project: project])
-			
-			if(project.properties.dir)
+			if(project.properties.dir) {
+				logger.debug "Installing addon[${project.properties.addon}] to {}", project.properties.dir
 				creator.install(project.properties.addon, project.properties.dir) 
-			else
+			} else {
+				logger.debug "Installing addon[${project.properties.addon}] to default standard location"
 				creator.install(project.properties.addon)
+			}
+		}
+		installTask.doFirst {
+			logger.info "Installing an addon..."
 		}
 		
 		def warTask = project.getTasks().getByPath("war")

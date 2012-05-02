@@ -14,19 +14,24 @@ class GripesUtil {
 	}
 
 	static def getSourceDir(project) {
-		this.getRoot(project)+this.getSettings(project).src
+//		this.getRoot(project)
+		this.getSettings(project).src
 	}
 	
 	static def getResourceDir(project) {
-		this.getRoot(project)+this.getSettings(project).resources
+		def gripesRes = this.getSettings(project).resources
+
+		project.projectDir.canonicalPath+gripesRes
 	}
 
 	static def getBasePackage(project) {
-		this.getRoot(project)+this.getSettings(project).src+"/"+this.getSettings(project).packageBase.replace(".","/")
+//		this.getRoot(project)
+		this.getSettings(project).src+"/"+this.getSettings(project).packageBase.replace(".","/")
 	}
 	
 	static def packageToDir(project, pkg) {
-		this.getRoot(project)+this.getSettings(project).src+"/"+pkg.replace(".","/")
+//		this.getRoot(project)+
+		this.getSettings(project).src+"/"+pkg.replace(".","/")
 	}
 	
 	static def makeDir(parentFile) {
@@ -35,10 +40,7 @@ class GripesUtil {
 		}
 	}
 	
-	static def saveFile(file,template) {
-		println "Saving " + file
-		println "setting text: " + template.length()
-		
+	static def saveFile(file,template) {		
 		makeDir(file.parentFile)
 		if(!file.exists()) {
 			file.createNewFile()
@@ -80,7 +82,7 @@ class GripesUtil {
 		def addonConfig
 		if(addons.size()>0) {
 			addons.each { addon ->
-				println "Adding: ${addon}"
+//				println "Adding: ${addon}"
 				if((addon=~/-src/).find()) {
 					addonConfig = new File("gripes-addons/"+addon.replace("-src","")+"/gripes.addon")
 				} else if(new File("addons/${addon}/gripes.addon").exists()) {
